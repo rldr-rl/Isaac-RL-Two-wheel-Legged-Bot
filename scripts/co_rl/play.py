@@ -11,7 +11,8 @@ from isaaclab.app import AppLauncher
 import matplotlib.pyplot as plt
 
 # local imports
-import cli_args  # isort: skip
+# import cli_args  # isort: skip
+from scripts.co_rl import cli_args
 from scripts.co_rl.core.runners import OffPolicyRunner
 
 from scripts.co_rl.core.utils.str2bool import str2bool

@@ -11,7 +11,8 @@ import sys
 from isaaclab.app import AppLauncher
 
 # local imports
-import cli_args  # isort: skip
+# import cli_args  # isort: skip
+from scripts.co_rl import cli_args
 from scripts.co_rl.core.runners import OffPolicyRunner
 
 # add argparse arguments
@@ -52,7 +53,7 @@ import os
 import torch
 from datetime import datetime
 
-from core.runners import OnPolicyRunner, SRMOnPolicyRunner
+from scripts.co_rl.core.runners import OnPolicyRunner, SRMOnPolicyRunner
 
 from isaaclab.envs import (
     DirectMARLEnv,

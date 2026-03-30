@@ -1,0 +1,2 @@
+from .Leglift_walk_rsl_rl_ppo_cfg import UnitreeGo2LegliftWalkPPORunnerCfg
+from .tumble_rsl_rl_ppo_cfg import UnitreeGo2TumblePPORunnerCfg

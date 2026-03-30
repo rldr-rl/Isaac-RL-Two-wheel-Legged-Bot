@@ -83,7 +83,6 @@ torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = False
 
-
 @hydra_task_config(args_cli.task, "co_rl_cfg_entry_point")
 def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg | ManagerBasedConstraintRLEnvCfg, agent_cfg: CoRlPolicyRunnerCfg):
     """Train with CO-RL agent."""

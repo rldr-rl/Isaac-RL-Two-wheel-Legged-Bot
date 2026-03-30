@@ -196,6 +196,9 @@ class FlamingoFlatEnvCfg(LocomotionVelocityFlatEnvCfg):
 
         self.observations.none_stack_policy.roll_pitch_commands = None
         self.observations.none_stack_critic.roll_pitch_commands = None
+
+        self.observations.none_stack_critic.height_scan = None
+        self.observations.none_stack_critic.lift_mask = None
         #! ********************************************************* !#
 
         # reset_robot_joint_zero should be called here
@@ -260,6 +263,9 @@ class FlamingoFlatEnvCfg_PLAY(FlamingoFlatEnvCfg):
         #! ****************** Observations setup ******************* !#
         self.observations.stack_policy.enable_corruption = False
         self.observations.none_stack_policy.enable_corruption = False
+
+        self.observations.none_stack_critic.height_scan = None
+        self.observations.none_stack_critic.lift_mask = None
         #! ********************************************************* !#
 
         # reset_robot_joint_zero should be called here

@@ -166,6 +166,9 @@ class FlamingoFlatEnvCfg(LocomotionVelocityFlatEnvCfg):
         self.observations.none_stack_critic.base_height_scan = None
         self.observations.none_stack_critic.left_wheel_height_scan = None
         self.observations.none_stack_critic.right_wheel_height_scan = None
+
+        self.observations.none_stack_critic.height_scan = None
+        self.observations.none_stack_critic.lift_mask = None
         #! ********************************************************* !#
 
         # observations

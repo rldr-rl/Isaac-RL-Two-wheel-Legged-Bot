@@ -21,8 +21,6 @@ class CoRlOffPolicyCfg:
 
     critic_hidden_dims: list[int] = MISSING
     """The hidden dimensions of the critic network."""
-
-
 ####################################################################################
 ####################################################################################
 
@@ -257,3 +255,28 @@ class CoRlPolicyRunnerCfg:
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
+
+
+@configclass
+class CoRlSacAlgorithmCfg:
+    """Configuration for the SAC algorithm."""
+    class_name: str = "SAC"
+    """The algorithm class name. Default is SAC."""
+
+
+@configclass
+class CoRlOffPolicyActorCriticCfg:
+    """Configuration for the Off-Policy (SAC/TQC/TACO) actor-critic networks."""
+    actor_hidden_dims: list[int] = MISSING
+    """The hidden dimensions of the actor network."""
+
+    critic_hidden_dims: list[int] = MISSING
+    """The hidden dimensions of the critic network."""
+
+
+@configclass
+class CoRlOffPolicyRunnerCfg(CoRlPolicyRunnerCfg):
+    """Configuration of the runner for off-policy algorithms."""
+    # 기존 PPO 정책과 알고리즘 설정을 Off-Policy용으로 덮어씁니다.
+    policy: CoRlOffPolicyActorCriticCfg = MISSING
+    algorithm: CoRlSacAlgorithmCfg = MISSING

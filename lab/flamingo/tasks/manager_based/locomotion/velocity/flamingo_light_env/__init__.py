@@ -39,6 +39,27 @@ gym.register(
     },
 )
 
+########################################### SAC Test ##############################################
+gym.register(
+    id="Isaac-Velocity-Flat-Flamingo-Light-v1-sac",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": flat_env.flat_env_stand_drive_cfg.FlamingoFlatEnvCfg,
+        "co_rl_cfg_entry_point": agents.co_rl_cfg.FlamingoSACRunnerCfg,
+    },
+)
+
+gym.register(
+    id="Isaac-Velocity-Flat-Flamingo-Light-Play-v1-ppo",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": flat_env.flat_env_stand_drive_cfg.FlamingoFlatEnvCfg_PLAY,
+        "co_rl_cfg_entry_point": agents.co_rl_cfg.FlamingoSACRunnerCfg,
+    },
+)
+
 ###########################################Track Velocity##############################################
 
 

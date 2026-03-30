@@ -12,5 +12,8 @@ from .rl_cfg import (
     CoRlPpoAlgorithmCfg,
     CoRlSrmPpoAlgorithmCfg,
     CoRlOffPolicyCfg,
+    CoRlOffPolicyRunnerCfg,
+    CoRlOffPolicyActorCriticCfg,
+    CoRlSacAlgorithmCfg,
 )
 from .vecenv_wrapper import CoRlVecEnvWrapper

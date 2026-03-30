@@ -10,6 +10,9 @@ from scripts.co_rl.core.wrapper import (
     CoRlPpoActorCriticCfg,
     CoRlPpoAlgorithmCfg,
     CoRlSrmPpoAlgorithmCfg,
+    CoRlOffPolicyRunnerCfg,
+    CoRlOffPolicyActorCriticCfg,
+    CoRlSacAlgorithmCfg,
 )
 
 ######################################## [ PPO CONFIG] ########################################
@@ -52,5 +55,37 @@ class FlamingoLightFlatPPORunnerCfg_Stand_Drive(FlamingoPPORunnerCfg):
 
         self.max_iterations = 5000
         self.experiment_name = "Flamingo_Light_Flat_Stand_Drive"
+        self.policy.actor_hidden_dims = [512, 256, 128]
+        self.policy.critic_hidden_dims = [512, 256, 128]
+
+
+@configclass
+class FlamingoSACRunnerCfg(CoRlOffPolicyRunnerCfg):
+    num_steps_per_env = 24
+    max_iterations = 1500
+    save_interval = 100
+    experiment_name = "FlamingoLightStand-v0_SAC"
+    experiment_description = "SAC test"
+    empirical_normalization = False
+
+    # 여기서 Off-Policy 전용 Policy Config를 호출합니다.
+    policy = CoRlOffPolicyActorCriticCfg(
+        actor_hidden_dims=[512, 256, 128],
+        critic_hidden_dims=[512, 256, 128],
+    )
+
+    # 여기서 SAC Algorithm Config를 호출하여 OffPolicyRunner가 SAC를 인식하게 합니다.
+    algorithm = CoRlSacAlgorithmCfg(
+        class_name="SAC"
+    )
+
+
+@configclass
+class FlamingoLightFlatSACRunnerCfg_Stand_Drive(FlamingoSACRunnerCfg):
+    def __post_init__(self):
+        super().__post_init__()
+
+        self.max_iterations = 5000
+        self.experiment_name = "Flamingo_Light_Flat_Stand_Drive_SAC"
         self.policy.actor_hidden_dims = [512, 256, 128]
         self.policy.critic_hidden_dims = [512, 256, 128]

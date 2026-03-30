@@ -2,10 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="889b4bda-a940-45b4-bf71-f79067f11f9c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Isaac-RL-Two-wheel-Legged-Bot.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/mdp/terminations.py" beforeDir="false" afterPath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/mdp/terminations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/co_rl/play.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/co_rl/play.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/co_rl/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/co_rl/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_env/flat_env/track_jump/flat_env_track_jump_cfg.py" beforeDir="false" afterPath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_env/flat_env/track_jump/flat_env_track_jump_cfg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_env/flat_env/track_yk/flat_env_track_yk_cfg.py" beforeDir="false" afterPath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_env/flat_env/track_yk/flat_env_track_yk_cfg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_light_env/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_light_env/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_light_env/agents/co_rl_cfg.py" beforeDir="false" afterPath="$PROJECT_DIR$/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_light_env/agents/co_rl_cfg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/co_rl/core/wrapper/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/co_rl/core/wrapper/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/co_rl/core/wrapper/rl_cfg.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/co_rl/core/wrapper/rl_cfg.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,23 +23,23 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="3BU2m6eTsYpqCbQVevoxGAnZSO1" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "rldr__dev",
-    "last_opened_file_path": "/home/rldr/PycharmProjects/Isaac-RL-Two-wheel-Legged-Bot"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/rldr/PycharmProjects/Isaac-RL-Two-wheel-Legged-Bot&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -65,7 +68,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="rldr_dev" />
+                        <option value="develop" />
                       </list>
                     </value>
                   </entry>

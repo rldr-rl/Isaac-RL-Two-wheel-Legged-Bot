@@ -39,6 +39,28 @@ gym.register(
     },
 )
 
+###########################################Track Jump##############################################
+gym.register(
+    id="Isaac-TrackJUMP-Flat-Flamingo-Light-v1-ppo",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": flat_env.flat_env_track_jump_cfg.FlamingoLightJumpEnvCfg,
+        "co_rl_cfg_entry_point": agents.co_rl_cfg.FlamingoLightFlatPPORunnerCfg_Stand_Drive,
+    },
+)
+
+gym.register(
+    id="Isaac-TrackJUMP-Flat-Flamingo-Light-Play-v1-ppo",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": flat_env.flat_env_track_jump_cfg.FlamingoLightJumpEnvCfg_PLAY,
+        "co_rl_cfg_entry_point": agents.co_rl_cfg.FlamingoLightFlatPPORunnerCfg_Stand_Drive,
+    },
+)
+
+
 ########################################### SAC Test ##############################################
 gym.register(
     id="Isaac-Velocity-Flat-Flamingo-Light-v1-sac",

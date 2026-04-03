@@ -213,7 +213,7 @@ class ObservationsCfg:
     class NoneStackCriticCfg(ObsGroup):
         velocity_commands = ObsTerm(func=mdp.generated_scaled_commands, params={"command_name": "base_velocity", "scale": (2.0, 0.0, 0.25)})
         roll_pitch_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "roll_pitch"})
-        event_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "yk_jump_command"})
+        event_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "event"})
 
         height_scan = ObsTerm(
             func=mdp.height_scan,
@@ -302,7 +302,7 @@ class ObservationsCfg:
         """Observations for None-Stack policy group."""
         velocity_commands = ObsTerm(func=mdp.generated_scaled_commands, params={"command_name": "base_velocity", "scale": (2.0, 0.0, 0.25)})
         roll_pitch_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "roll_pitch"})
-        event_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "yk_jump_command"})
+        event_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "event"})
         height_scan = ObsTerm(
             func=mdp.height_scan,
             params={"sensor_cfg": SceneEntityCfg("height_scanner"), 'offset': 0.0},

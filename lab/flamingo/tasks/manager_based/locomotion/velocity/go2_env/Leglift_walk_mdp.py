@@ -5,12 +5,16 @@ from collections.abc import Sequence
 import torch
 from isaaclab.assets import Articulation
 
+# -----------------------------------------------------------------------------
+# Low-level helpers
+# -----------------------------------------------------------------------------
 
 def _get_robot(env, asset_cfg) -> Articulation:
     return env.scene[asset_cfg.name]
 
 
 def _resolve_entity_ids(ids, names, resolver_name: str, obj, *, entity_label: str):
+    """Resolve SceneEntityCfg ids robustly across IsaacLab revisions."""
     if names is not None:
         if ids is not None and not isinstance(ids, slice):
             try:
@@ -68,6 +72,19 @@ def _get_body_pos_w(robot: Articulation) -> torch.Tensor:
     raise AttributeError("Robot articulation data does not expose body world positions.")
 
 
+def _get_body_lin_vel_w(robot: Articulation) -> torch.Tensor:
+    data = robot.data
+    for attr_name in ("body_link_lin_vel_w", "body_com_lin_vel_w", "body_lin_vel_w"):
+        value = getattr(data, attr_name, None)
+        if value is not None:
+            return value
+    for attr_name in ("body_state_w", "body_link_state_w"):
+        value = getattr(data, attr_name, None)
+        if value is not None and value.shape[-1] >= 10:
+            return value[..., 7:10]
+    raise AttributeError("Robot articulation data does not expose body world linear velocities.")
+
+
 def _get_root_height_w(robot: Articulation) -> torch.Tensor:
     data = robot.data
     for attr_name in ("root_pos_w", "root_link_pos_w", "root_com_pos_w"):
@@ -110,6 +127,14 @@ def _get_contact_force_magnitude_per_body(env, sensor_cfg) -> torch.Tensor:
     return torch.linalg.vector_norm(forces, dim=-1)
 
 
+def _contact_flags(env, sensor_cfg, contact_force_threshold: float = 1.0) -> torch.Tensor:
+    contact_force_mag = _get_contact_force_magnitude_per_body(env, sensor_cfg)
+    contact = (contact_force_mag >= contact_force_threshold).float()
+    if contact.ndim == 1:
+        contact = contact.unsqueeze(-1)
+    return contact
+
+
 def _after_settle_mask(env, settle_time_s: float):
     if settle_time_s <= 0.0:
         return 1.0
@@ -124,12 +149,21 @@ def _validate_positive(name: str, value: float):
         raise ValueError(f"{name} must be > 0. Received {value}.")
 
 
+def _validate_positive_int(name: str, value: int):
+    if value <= 0:
+        raise ValueError(f"{name} must be >= 1. Received {value}.")
+
+
 def _validate_target_delta(target_delta: Sequence[float], expected_dim: int):
     if len(target_delta) != expected_dim:
         raise ValueError(
             f"target_delta length mismatch: expected {expected_dim}, got {len(target_delta)}."
         )
 
+
+# -----------------------------------------------------------------------------
+# Reward primitives
+# -----------------------------------------------------------------------------
 
 def selected_joint_deviation_l2_exp(env, asset_cfg, target_delta, sigma: float = 0.35):
     _validate_positive("sigma", sigma)
@@ -139,6 +173,7 @@ def selected_joint_deviation_l2_exp(env, asset_cfg, target_delta, sigma: float =
     joint_pos = robot.data.joint_pos[:, joint_ids]
     default_joint_pos = robot.data.default_joint_pos[:, joint_ids]
     _validate_target_delta(target_delta, joint_pos.shape[1])
+
     target = default_joint_pos + joint_pos.new_tensor(target_delta).view(1, -1)
     err = torch.sum((joint_pos - target) ** 2, dim=1)
     return torch.exp(-err / (sigma**2))
@@ -155,6 +190,25 @@ def selected_joint_default_l2_exp(env, asset_cfg, sigma: float = 0.25):
     return torch.exp(-err / (sigma**2))
 
 
+def selected_joint_vel_l2_when_no_contact(
+    env,
+    asset_cfg,
+    sensor_cfg,
+    contact_force_threshold: float = 1.0,
+    settle_time_s: float = 0.0,
+):
+
+    robot = _get_robot(env, asset_cfg)
+    joint_ids = _resolve_joint_ids(robot, asset_cfg)
+    joint_vel = robot.data.joint_vel[:, joint_ids]
+    value = torch.mean(joint_vel**2, dim=1)
+
+    contact = _contact_flags(env, sensor_cfg, contact_force_threshold=contact_force_threshold)
+    has_contact = contact[:, 0] if contact.shape[1] == 1 else torch.any(contact > 0.5, dim=1).float()
+    no_contact = 1.0 - has_contact
+    return value * no_contact * _after_settle_mask(env, settle_time_s)
+
+
 def base_height_l2_exp(env, asset_cfg, target_height: float = 0.33, sigma: float = 0.04):
     _validate_positive("sigma", sigma)
 
@@ -163,26 +217,74 @@ def base_height_l2_exp(env, asset_cfg, target_height: float = 0.33, sigma: float
     env_origin_z = _get_env_origin_z(env)
     if env_origin_z is not None:
         base_height = base_height - env_origin_z
+
     err = (base_height - target_height) ** 2
     return torch.exp(-err / (sigma**2))
 
 
-def _selected_body_contact_indicator_raw(env, sensor_cfg, contact_force_threshold: float = 1.0):
-    contact_force_mag = _get_contact_force_magnitude_per_body(env, sensor_cfg)
-    contact = (contact_force_mag >= contact_force_threshold).float()
-    if contact.ndim == 1:
-        return contact
-    if contact.shape[1] == 1:
-        return contact[:, 0]
-    return torch.any(contact > 0.5, dim=1).float()
+def selected_body_contact_indicator(
+    env,
+    sensor_cfg,
+    contact_force_threshold: float = 1.0,
+    settle_time_s: float = 0.0,
+):
+    contact = _contact_flags(env, sensor_cfg, contact_force_threshold=contact_force_threshold)
+    value = contact[:, 0] if contact.shape[1] == 1 else torch.any(contact > 0.5, dim=1).float()
+    return value * _after_settle_mask(env, settle_time_s)
 
 
-def _selected_bodies_all_contact_indicator_raw(env, sensor_cfg, contact_force_threshold: float = 1.0):
-    contact_force_mag = _get_contact_force_magnitude_per_body(env, sensor_cfg)
-    contact = (contact_force_mag >= contact_force_threshold).float()
-    if contact.ndim == 1:
-        return contact
-    return torch.all(contact > 0.5, dim=1).float()
+def selected_bodies_contact_fraction(
+    env,
+    sensor_cfg,
+    contact_force_threshold: float = 1.0,
+    settle_time_s: float = 0.0,
+):
+    contact = _contact_flags(env, sensor_cfg, contact_force_threshold=contact_force_threshold)
+    value = torch.mean(contact, dim=1)
+    return value * _after_settle_mask(env, settle_time_s)
+
+
+def selected_bodies_min_contact_fraction(
+    env,
+    sensor_cfg,
+    contact_force_threshold: float = 1.0,
+    min_contact_count: int = 2,
+    settle_time_s: float = 0.0,
+):
+    _validate_positive_int("min_contact_count", min_contact_count)
+
+    contact = _contact_flags(env, sensor_cfg, contact_force_threshold=contact_force_threshold)
+    contact_count = torch.sum(contact, dim=1)
+    denom = float(min_contact_count)
+    value = torch.clamp(contact_count / denom, max=1.0)
+    return value * _after_settle_mask(env, settle_time_s)
+
+
+def selected_bodies_contact_xy_vel_l2(
+    env,
+    asset_cfg,
+    sensor_cfg,
+    contact_force_threshold: float = 1.0,
+    settle_time_s: float = 0.0,
+):
+    robot: Articulation = _get_robot(env, asset_cfg)
+    body_ids = _resolve_body_ids(robot, asset_cfg)
+    body_lin_vel_w = _get_body_lin_vel_w(robot)[:, body_ids, :2]
+    if body_lin_vel_w.ndim == 2:
+        body_lin_vel_w = body_lin_vel_w.unsqueeze(1)
+
+    slip_sq = torch.sum(body_lin_vel_w**2, dim=-1)
+    contact = _contact_flags(env, sensor_cfg, contact_force_threshold=contact_force_threshold)
+
+    if slip_sq.shape[1] != contact.shape[1]:
+        num_bodies = min(slip_sq.shape[1], contact.shape[1])
+        slip_sq = slip_sq[:, :num_bodies]
+        contact = contact[:, :num_bodies]
+
+    contact_count = torch.sum(contact, dim=1)
+    denom = torch.clamp(contact_count, min=1.0)
+    value = torch.sum(slip_sq * contact, dim=1) / denom
+    return value * _after_settle_mask(env, settle_time_s)
 
 
 def gated_selected_joint_deviation_l2_exp(
@@ -201,45 +303,19 @@ def gated_selected_joint_deviation_l2_exp(
     return value * _after_settle_mask(env, settle_time_s)
 
 
-def selected_body_contact_indicator(
-    env,
-    sensor_cfg,
-    contact_force_threshold: float = 1.0,
-    settle_time_s: float = 0.0,
-):
-    value = _selected_body_contact_indicator_raw(
-        env,
-        sensor_cfg=sensor_cfg,
-        contact_force_threshold=contact_force_threshold,
-    )
-    return value * _after_settle_mask(env, settle_time_s)
-
-
-def selected_bodies_all_contact_indicator(
-    env,
-    sensor_cfg,
-    contact_force_threshold: float = 1.0,
-    settle_time_s: float = 0.0,
-):
-    value = _selected_bodies_all_contact_indicator_raw(
-        env,
-        sensor_cfg=sensor_cfg,
-        contact_force_threshold=contact_force_threshold,
-    )
-    return value * _after_settle_mask(env, settle_time_s)
-
-
-def selected_body_height_above_min_no_contact_with_all_support_exp(
+def selected_body_height_above_min_no_contact_with_min_support_exp(
     env,
     asset_cfg,
     lifted_sensor_cfg,
     support_sensor_cfg,
-    min_height: float = 0.07,
-    sigma: float = 0.025,
+    min_height: float = 0.08,
+    sigma: float = 0.03,
     contact_force_threshold: float = 1.0,
+    min_contact_count: int = 2,
     settle_time_s: float = 0.0,
 ):
     _validate_positive("sigma", sigma)
+    _validate_positive_int("min_contact_count", min_contact_count)
 
     robot: Articulation = _get_robot(env, asset_cfg)
     body_ids = _resolve_body_ids(robot, asset_cfg)
@@ -261,34 +337,39 @@ def selected_body_height_above_min_no_contact_with_all_support_exp(
     deficit = torch.clamp(min_height - body_height, min=0.0)
     clearance_reward = torch.exp(-(deficit**2) / (sigma**2))
 
-    no_contact = 1.0 - _selected_body_contact_indicator_raw(
-        env,
-        sensor_cfg=lifted_sensor_cfg,
-        contact_force_threshold=contact_force_threshold,
-    )
-    all_support = _selected_bodies_all_contact_indicator_raw(
+    contact = _contact_flags(env, lifted_sensor_cfg, contact_force_threshold=contact_force_threshold)
+    no_contact = 1.0 - (contact[:, 0] if contact.shape[1] == 1 else torch.any(contact > 0.5, dim=1).float())
+
+    support_ok = selected_bodies_min_contact_fraction(
         env,
         sensor_cfg=support_sensor_cfg,
         contact_force_threshold=contact_force_threshold,
+        min_contact_count=min_contact_count,
+        settle_time_s=0.0,
     )
-    return clearance_reward * no_contact * all_support * _after_settle_mask(env, settle_time_s)
+
+    return clearance_reward * no_contact * support_ok * _after_settle_mask(env, settle_time_s)
 
 
-def selected_body_no_contact_with_all_support_bonus(
+def selected_body_no_contact_with_min_support_bonus(
     env,
     sensor_cfg,
     support_sensor_cfg,
     contact_force_threshold: float = 1.0,
+    min_contact_count: int = 2,
     settle_time_s: float = 0.0,
 ):
-    no_contact = 1.0 - _selected_body_contact_indicator_raw(
-        env,
-        sensor_cfg=sensor_cfg,
-        contact_force_threshold=contact_force_threshold,
-    )
-    all_support = _selected_bodies_all_contact_indicator_raw(
+    _validate_positive_int("min_contact_count", min_contact_count)
+
+    contact = _contact_flags(env, sensor_cfg, contact_force_threshold=contact_force_threshold)
+    no_contact = 1.0 - (contact[:, 0] if contact.shape[1] == 1 else torch.any(contact > 0.5, dim=1).float())
+
+    support_ok = selected_bodies_min_contact_fraction(
         env,
         sensor_cfg=support_sensor_cfg,
         contact_force_threshold=contact_force_threshold,
+        min_contact_count=min_contact_count,
+        settle_time_s=0.0,
     )
-    return no_contact * all_support * _after_settle_mask(env, settle_time_s)
+
+    return no_contact * support_ok * _after_settle_mask(env, settle_time_s)
